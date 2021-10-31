@@ -40,3 +40,17 @@ And yet the number of developers who get the above code wrong is staggering.
 
 ## Related links
 [PolledTimeout at ESP8266's Arduino repo](https://github.com/esp8266/Arduino/blob/master/cores/esp8266/PolledTimeout.h)
+
+
+## Disclaimers
+This is a work in progress, i.e.: not a finished implementation. 
+There are zero guarantees about whether this works as advertised, or even whether this fits your needs. If it works for you, yay. If not, you're free to adapt it.
+
+# Contribution Policy
+This is primarily a personal project.
+
+If you want to contribute, sure, I'll take a look at your PR.
+
+If you want to discuss and work together, sure, open an issue.
+
+If you want me to use time to help you, or to fix your specific use case, you're in the wrong place.
