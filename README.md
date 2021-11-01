@@ -19,6 +19,7 @@ Of note, the periodic logic is implemented with:
 
 The logic that this class encapsulates is a classic: get some initial time marker T0, then keep polling until some timeout has elapsed.
 Example:
+
     unsigned int start = millis();
     unsigned int timeout = 1000; //ms
     while(millis() - start < timeout) //1-shot
