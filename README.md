@@ -5,12 +5,22 @@ Class in C++ that encapsulates checking that a time window has elapsed.
 ## Introduction
 
 The logic is split into several separate policy clases in addition to the main logic class:
-- TimeSource: represents a source of time. Examples of a time source are: reading Real Time Clock hardware, calling some time function like POXIX's time()/gettimeofday() or Arduino's millis(), reading a hardware timer like a CPU clock counter. The unit of the time source is part of this policy as well.
+- TimeSource: represents a source of time. Examples of a time source are: 
+    *  reading Real Time Clock hardware
+    *  calling some time function like POSIX's time()/gettimeofday() or Arduino's millis()
+    *  reading a hardware timer like a CPU clock counter
+  
+  The unit of the time source is part of this policy as well.
 - TimeUnit: represents the unit of time to be used by the PolledTimeout class. This policy class converts the unit of the time source to the unit that the polled timeout class offers. The internals are mostly constexpr methods. All math is integer to keep it simple.
-- YieldPolicy: implements what to do every time the time gets polled. Example actions are: nothing, yield() context, sleep(), delay(), etc.
+- YieldPolicy: implements what to do every time the time gets polled. Example actions are:
+    * nothing
+    * yield() context
+    * sleep()
+    * delay()
 - PolledTimeout: the main class to use. This is a template class that builds the needed logic to poll a time. It requires policy classes as template arguments and a timeout value as a constructor argument.
 
 In addition, there is one template bool parameter to define at compile time whether the class's logic will work as a one-shot poll (i.e.: once expired it must be manually reset) or periodic poll (i.e.: once expired the internals automatically reset).
+
 Of note, the periodic logic is implemented with:
 - the assurance that there is zero drift, so if the timeout value is e.g.: 10, the timouts are assured to be at T0 + i*10
 - the possibility of jitter. Given that this is a polled implementation, the time of polling can't be assured and is in fact platform-dependant. That means that, in the best case, a poll could be done at exactly the timeout time, but due to the involved calculations, the returned decision will be just a few cycles/instructions later. In addition, for multitasking environments, the OS may choose to take the CPU away from the polling thread during the actual calculation.
@@ -29,7 +39,9 @@ Example:
 
 And yet the number of developers who get the above code wrong is staggering.
 
-## Example use:
+In addition, the implementation is template-based using constexpr. Therefore, all optimizations happen at compile time, and the resulting asm is tiny.
+
+## Example 1: Keep trying something until timeout
 
     using oneShotMs = polledTimeout::timeoutTemplate<false, YieldPolicy::DoNothing, TimePolicy::TimeMillis>;
     oneShotMS timeout(1000); //1-second one-shot
@@ -38,7 +50,39 @@ And yet the number of developers who get the above code wrong is staggering.
     {
       trySomething();
     }
+    
+## Example 2: Busy-wait until timeout, then continue
 
+    using oneShotMs = polledTimeout::timeoutTemplate<false, YieldPolicy::DoNothing, TimePolicy::TimeMillis>;
+    oneShotMS timeout(1000); //1-second one-shot
+
+    while(timeout); //wait a bit
+    
+    doSomething();
+
+## Example 3: Wait until timeout polling in 100ms intervals, then continue
+
+    using oneShotMs = polledTimeout::timeoutTemplate<false, YieldPolicy::DoNothing, TimePolicy::TimeMillis>;
+    oneShotMS timeout(1000); //1-second one-shot
+
+    while(timeout)
+    {
+       delay(100);
+    }
+    
+    doSomething();
+
+## Example 4: Do something periodically
+
+    using periodicMs = polledTimeout::timeoutTemplate<true, YieldPolicy::DoNothing, TimePolicy::TimeMillis>;
+    periodicMS timeout(1000); //1-second periodic
+
+    while(true)
+    {
+       if(timeout)
+         doSomething();
+    }
+    
 ## Related links
 [PolledTimeout at ESP8266's Arduino repo](https://github.com/esp8266/Arduino/blob/master/cores/esp8266/PolledTimeout.h)
 
